@@ -41,6 +41,7 @@ object Build extends Build {
       "commons-lang" % "commons-lang" % "2.6",
       "org.apache.commons" % "commons-math" % "2.2",
       "org.apache.commons" % "commons-io" % "1.3.2",
+      "org.joda" % "joda-convert" % "1.8.1",      
       "org.apache.kafka" %% "kafka" % "0.8.0"
         exclude("javax.jms", "jms")
         exclude("com.sun.jdmk", "jmxtools")
