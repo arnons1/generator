@@ -63,7 +63,7 @@ class Writer(eventsStartRange: Int,
 
     ms("Customer") += "%s%c%s%c%s%c%d%c%s%c%s%c%d%c%d%c%s%c%s\n".format(osgeEvent.cID, formatChar, osgeEvent.cName, formatChar,
       osgeEvent.cGender, formatChar, osgeEvent.cAge, formatChar, osgeEvent.cRegisterDate, formatChar,
-      osgeEvent.cCountry, formatChar, osgeEvent.cFriendCount, formatChar, osgeEvent.cLifeTime, custPlatform, custOs)
+      osgeEvent.cCountry, formatChar, osgeEvent.cFriendCount, formatChar, osgeEvent.cLifeTime, formatChar, custPlatform, formatChar, custOs)
 
     if (osgeEvent.cRevenue != 0) {
       ms("Revenue") += "%s%c%s%c%d%c%s\n".format(osgeEvent.cID, formatChar, osgeEvent.paidDate, formatChar, osgeEvent.cRevenue, formatChar, osgeEvent.cRevSource)
@@ -76,7 +76,7 @@ class Writer(eventsStartRange: Int,
                             Customers.GAMES_MALE_PROBABILITY
                           }
       ms("Fact") += "%s%c%s%c%s%c%d%c%d%c%d\n".format(osgeEvent.cID, formatChar, utils.pickWeightedKey(gamesProbMap), formatChar,
-        dateUtils.genDate(dateFormatter.format(osgeEvent.cRegisterDate), dateFormatter.format(Calendar.getInstance().getTimeInMillis)), formatChar,
+        dateUtils.genDate(osgeEvent.cRegisterDate, dateFormatter.format(Calendar.getInstance().getTimeInMillis)), formatChar,
         playTime, formatChar, numWins, formatChar, numLosses)
     }
     ms
