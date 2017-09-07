@@ -13,37 +13,33 @@ import java.util.Calendar
 object Customers {
   // which country should occur at what probability
   private val COUNTRY_PROBABILITY = Map(
-    "USA"      -> 60,
-    "UK"       -> 25,
-    "CANADA"   -> 5,
-    "MEXICO"   -> 5,
-    "GERMANY"  -> 10,
-    "FRANCE"   -> 10,
-    "EGYPT"    -> 5
+    "USA"      -> 70,
+    "UK"       -> 20,
+    "CANADA"   -> 7,
+    "MEXICO"   -> 3
   )
 
   // game most played by females
   val GAMES_FEMALE_PROBABILITY = Map(
-    "city"       -> 50,
+    "bubbles"       -> 70,
     "pictionary" -> 30,
-    "scramble"   -> 15,
-    "sniper"     -> 5
+    "roulette"   -> 15,
+    "poker"     -> 5
   )
 
   // game most played by males
   val GAMES_MALE_PROBABILITY = Map(
-    "sniper"     -> 70,
-    "scramble"   -> 20,
-    "pictionary" -> 10,
-    "city"       -> 10
-  )
+    "bubbles"     -> 2,
+    "roulette"   -> 40,
+    "pictionary" -> 8,
+    "poker"       -> 50  )
 }
 
 class Customers(cId: String, cName: String, cGender: String) {
   private val utils = new Utils
   private val dateUtils = new DateUtils
   private val random = Random
-  private val formatter = new SimpleDateFormat("dd-MMM-yy HH:mm:ss")
+  private val formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
   /*
    * Accessor(s)
@@ -51,7 +47,7 @@ class Customers(cId: String, cName: String, cGender: String) {
   val custId = cId
   val custName = cName
   val custEmail = genEmail
-  val registerDate = dateUtils.genDate("01-Jan-10 12:10:00", formatter.format(Calendar.getInstance().getTimeInMillis))
+  val registerDate = dateUtils.genDate("2010-01-01 12:10:00", formatter.format(Calendar.getInstance().getTimeInMillis))
   val custCountry = utils.pickWeightedKey(Customers.COUNTRY_PROBABILITY)
   val custAddress = custCountry match {
     case "USA" => new Address().toString
@@ -101,7 +97,7 @@ class Customers(cId: String, cName: String, cGender: String) {
                               0
                             }
   val paidDate =  if (customerPaidAmount == 0) {
-                    0
+                    ""
                   } else {
                     // generate a date between users registration date and time now
                     dateUtils.genDate(formatter.format(registerDate), formatter.format(Calendar.getInstance().getTimeInMillis))
@@ -114,11 +110,9 @@ class Customers(cId: String, cName: String, cGender: String) {
                           " " + paidDate + " " + custGamesPlayed.toString
 
   private def genEmail = {
-    val firstName = cName.split(" ").head
-    val lastName = cName.split(" ").last
     val domains = Array("yahoo.com", "gmail.com", "privacy.net", "webmail.com", "msn.com",
       "hotmail.com", "example.com", "privacy.net")
-    s"${(firstName + lastName).toLowerCase}${random.nextInt(100)}@${domains(random.nextInt(domains.size))}"
+    s"${domains(random.nextInt(domains.size))}"
   }
 
   private def gamesPlayed(customerLifeTime: Int, customerGender: String) = {

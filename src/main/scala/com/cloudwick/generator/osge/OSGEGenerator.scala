@@ -1,14 +1,19 @@
 package com.cloudwick.generator.osge
 
+import java.util.zip.CRC32
+
 /**
  * Description goes here
  * @author ashrith 
  */
 class OSGEGenerator {
+  private val crcGenerator = new CRC32()
 
   def eventGenerate = {
     val person = new Person
-    val customerID = java.util.UUID.randomUUID.toString
+    crcGenerator.reset()
+    crcGenerator.update(java.util.UUID.randomUUID.toString.getBytes())
+    val customerID = crcGenerator.getValue().toString()
     val customer = new Customers(customerID, person.name, person.gender)
 
     new OSGEEvent(
@@ -22,10 +27,10 @@ class OSGEGenerator {
       customer.registerDate,
       customer.custFriendCount,
       customer.custLifeTime,
-      customer.custGamesPlayed("city"),
+      customer.custGamesPlayed("bubbles"),
       customer.custGamesPlayed("pictionary"),
-      customer.custGamesPlayed("scramble"),
-      customer.custGamesPlayed("sniper"),
+      customer.custGamesPlayed("roulette"),
+      customer.custGamesPlayed("poker"),
       customer.customerPaidAmount,
       customer.paidSubscriber,
       customer.paidDate

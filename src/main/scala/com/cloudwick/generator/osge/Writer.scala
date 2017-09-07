@@ -24,7 +24,7 @@ class Writer(eventsStartRange: Int,
              config: OptionsConfig) extends Runnable with LazyLogging {
   lazy val utils = new Utils
   lazy val dateUtils = new DateUtils
-  lazy val dateFormatter = new SimpleDateFormat("dd-MMM-yy HH:mm:ss")
+  lazy val dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
   lazy val sleepTime = if(config.eventsPerSec == 0) 0 else 1000/config.eventsPerSec
 
@@ -36,16 +36,16 @@ class Writer(eventsStartRange: Int,
       case "csv" => ','
       case _ => '\t'
     }
-    "%s%c%s%c%s%c%s%c%d%c%s%c%s%c%d%c%d%c%d%c%d%c%d%c%d%c%d%c%d%c%s\n".format(osgeEvent.cID, formatChar,
+    "%s%c%s%c%s%c%s%c%d%c%s%c%s%c%s%c%d%c%d%c%d%c%d%c%d%c%d%c%d%c%s\n".format(osgeEvent.cID, formatChar,
       osgeEvent.cName, formatChar, osgeEvent.cEmail, formatChar, osgeEvent.cGender, formatChar, osgeEvent.cAge,
       formatChar, osgeEvent.cAddress, formatChar, osgeEvent.cCountry, formatChar, osgeEvent.cRegisterDate, formatChar,
-      osgeEvent.cFriendCount, formatChar, osgeEvent.cLifeTime, formatChar, osgeEvent.cityGamePlayed, formatChar,
-      osgeEvent.pictionaryGamePlayed, formatChar, osgeEvent.scrambleGamePlayed, formatChar, osgeEvent.sniperGamePlayed,
+      osgeEvent.cFriendCount, formatChar, osgeEvent.cLifeTime, formatChar, osgeEvent.bubblesGamePlayed, formatChar,
+      osgeEvent.pictionaryGamePlayed, formatChar, osgeEvent.rouletteGamePlayed, formatChar, osgeEvent.pokerGamePlayed,
       formatChar, osgeEvent.cRevenue, formatChar, osgeEvent.paidSubscriber)
   }
 
   def formatEventMultiToString(osgeEvent: OSGEEvent, formatter: String) = {
-    val dateFormatter = new SimpleDateFormat("dd-MMM-yy HH:mm:ss")
+    val dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     val formatChar = formatter match {
       case "tsv" => '\t'
       case "csv" => ','
@@ -58,12 +58,12 @@ class Writer(eventsStartRange: Int,
       "Fact" -> new ArrayBuffer[String](osgeEvent.cLifeTime)
     )
 
-    ms("Customer") += "%s%c%s%c%s%c%d%c%d%c%s%c%d%c%d\n".format(osgeEvent.cID, formatChar, osgeEvent.cName, formatChar,
+    ms("Customer") += "%s%c%s%c%s%c%d%c%s%c%s%c%d%c%d\n".format(osgeEvent.cID, formatChar, osgeEvent.cName, formatChar,
       osgeEvent.cGender, formatChar, osgeEvent.cAge, formatChar, osgeEvent.cRegisterDate, formatChar,
       osgeEvent.cCountry, formatChar, osgeEvent.cFriendCount, formatChar, osgeEvent.cLifeTime)
 
     if (osgeEvent.cRevenue != 0) {
-      ms("Revenue") += "%s%c%d%c%d\n".format(osgeEvent.cID, formatChar, osgeEvent.paidDate, formatChar, osgeEvent.cRevenue)
+      ms("Revenue") += "%s%c%s%c%d\n".format(osgeEvent.cID, formatChar, osgeEvent.paidDate, formatChar, osgeEvent.cRevenue)
     }
 
     1 to osgeEvent.cLifeTime foreach { _ =>
@@ -72,12 +72,12 @@ class Writer(eventsStartRange: Int,
                           } else {
                             Customers.GAMES_MALE_PROBABILITY
                           }
-      ms("Fact") += "%s%c%s%c%d\n".format(osgeEvent.cID, formatChar, utils.pickWeightedKey(gamesProbMap), formatChar,
+      ms("Fact") += "%s%c%s%c%s\n".format(osgeEvent.cID, formatChar, utils.pickWeightedKey(gamesProbMap), formatChar,
         dateUtils.genDate(dateFormatter.format(osgeEvent.cRegisterDate), dateFormatter.format(Calendar.getInstance().getTimeInMillis)))
     }
     ms
   }
-
+/*
   def avroEvent(event: OSGEEvent) = {
     OSGERecord.newBuilder()
       .setCId(event.cID)
@@ -90,10 +90,10 @@ class Writer(eventsStartRange: Int,
       .setCRegisterDate(event.cRegisterDate)
       .setCFriendCount(event.cFriendCount)
       .setCLifeTime(event.cLifeTime)
-      .setCityPlayedCount(event.cityGamePlayed)
+      .setCityPlayedCount(event.bubblesGamePlayed)
       .setPictionaryPlayedCount(event.pictionaryGamePlayed)
-      .setScramblePlayedCount(event.scrambleGamePlayed)
-      .setSniperPlayedCount(event.sniperGamePlayed)
+      .setScramblePlayedCount(event.rouletteGamePlayed)
+      .setSniperPlayedCount(event.pokerGamePlayed)
       .setCRevenue(event.cRevenue)
       .setPaidSubscriber(event.paidSubscriber)
       .build()
@@ -136,7 +136,7 @@ class Writer(eventsStartRange: Int,
       )
       .build()
   }
-
+*/
   def run() = {
     val totalEvents = eventsEndRange - eventsStartRange + 1
     var batchCount: Int = 0
@@ -220,19 +220,19 @@ class Writer(eventsStartRange: Int,
          */
         if (config.multiTable) {
           if (config.outputFormat == "avro") {
-            customer = customerEvent(osgeEvent)
-            customerEventsAvro += customer
-            sizeCounter.getAndAdd(sizeCounter.getAndAdd(customer.toString.getBytes.length))
-            if (osgeEvent.cRevenue != 0) {
-              revenue = revenueEvent(osgeEvent)
-              revenueEventsAvro += revenue
-              sizeCounter.getAndAdd(sizeCounter.getAndAdd(revenue.toString.getBytes.length))
-            }
-            1 to osgeEvent.cLifeTime foreach { _ =>
-              fact = factEvent(osgeEvent)
-              factEventsAvro += fact
-              sizeCounter.getAndAdd(sizeCounter.getAndAdd(fact.toString.getBytes.length))
-            }
+            //customer = customerEvent(osgeEvent)
+            //customerEventsAvro += customer
+            //sizeCounter.getAndAdd(sizeCounter.getAndAdd(customer.toString.getBytes.length))
+            //if (osgeEvent.cRevenue != 0) {
+            //  revenue = revenueEvent(osgeEvent)
+            //  revenueEventsAvro += revenue
+            //  sizeCounter.getAndAdd(sizeCounter.getAndAdd(revenue.toString.getBytes.length))
+            //}
+            //1 to osgeEvent.cLifeTime foreach { _ =>
+            //  fact = factEvent(osgeEvent)
+            //  factEventsAvro += fact
+            //  sizeCounter.getAndAdd(sizeCounter.getAndAdd(fact.toString.getBytes.length))
+            //}
           } else {
             multiTableText = formatEventMultiToString(osgeEvent, config.outputFormat)
             customerEventsText ++= multiTableText("Customer")
@@ -244,9 +244,9 @@ class Writer(eventsStartRange: Int,
           }
         } else {
           if (config.outputFormat == "avro") {
-            avroPlaceHolder = avroEvent(osgeEvent)
-            eventsAvro += avroPlaceHolder
-            sizeCounter.getAndAdd(avroPlaceHolder.toString.getBytes.length)
+            //avroPlaceHolder = avroEvent(osgeEvent)
+            //eventsAvro += avroPlaceHolder
+            //sizeCounter.getAndAdd(avroPlaceHolder.toString.getBytes.length)
           } else {
             textPlaceHolder = formatEventToString(osgeEvent, config.outputFormat)
             eventsText += textPlaceHolder
@@ -258,12 +258,12 @@ class Writer(eventsStartRange: Int,
         if (batchCount == config.flushBatch || batchCount == totalEvents) {
           if (config.multiTable) {
             if (config.outputFormat == "avro") {
-              outputAvroFileCustomerHandler.publishBuffered(customerEventsAvro)
-              outputAvroFileRevenueHandler.publishBuffered(revenueEventsAvro)
-              outputAvroFileFactHandler.publishBuffered(factEventsAvro)
-              customerEventsAvro.clear()
-              revenueEventsAvro.clear()
-              factEventsAvro.clear()
+              //outputAvroFileCustomerHandler.publishBuffered(customerEventsAvro)
+              //outputAvroFileRevenueHandler.publishBuffered(revenueEventsAvro)
+              //outputAvroFileFactHandler.publishBuffered(factEventsAvro)
+              //customerEventsAvro.clear()
+              //revenueEventsAvro.clear()
+              //factEventsAvro.clear()
             } else {
               outputFileCustomerHandler.publishBuffered(customerEventsText)
               outputFileRevenueHandler.publishBuffered(revenueEventsText)
@@ -275,8 +275,8 @@ class Writer(eventsStartRange: Int,
             batchCount = 0
           } else {
             if (config.outputFormat == "avro") {
-              outputAvroFileHandler.publishBuffered(eventsAvro)
-              eventsAvro.clear()
+              //outputAvroFileHandler.publishBuffered(eventsAvro)
+              //eventsAvro.clear()
             } else {
               outputFileHandler.publishBuffered(eventsText)
               eventsText.clear()
@@ -292,9 +292,9 @@ class Writer(eventsStartRange: Int,
     finally {
       if (config.multiTable) {
         if (config.outputFormat == "avro") {
-          outputAvroFileCustomerHandler.close()
-          outputAvroFileRevenueHandler.close()
-          outputAvroFileFactHandler.close()
+          //outputAvroFileCustomerHandler.close()
+          //outputAvroFileRevenueHandler.close()
+          //outputAvroFileFactHandler.close()
         } else {
           outputFileCustomerHandler.close()
           outputFileRevenueHandler.close()
@@ -302,7 +302,7 @@ class Writer(eventsStartRange: Int,
         }
       } else {
         if (config.outputFormat == "avro") {
-          outputAvroFileHandler.close()
+          //outputAvroFileHandler.close()
         } else {
           outputFileHandler.close()
         }
