@@ -111,7 +111,7 @@ class Customers(cId: String, cName: String, cGender: String, cPlatform: String, 
                     ""
                   } else {
                     // generate a date between users registration date and time now
-                    dateUtils.genDate(formatter.format(registerDate), formatter.format(Calendar.getInstance().getTimeInMillis))
+                    dateUtils.genDate(registerDate, formatter.format(Calendar.getInstance().getTimeInMillis))
                   }
   // games played by user based on gender
   val custGamesPlayed = gamesPlayed(custLifeTime, cGender)

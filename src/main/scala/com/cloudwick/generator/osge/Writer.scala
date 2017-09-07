@@ -76,8 +76,8 @@ class Writer(eventsStartRange: Int,
                             Customers.GAMES_MALE_PROBABILITY
                           }
       ms("Fact") += "%s%c%s%c%s%c%d%c%d%c%d\n".format(osgeEvent.cID, formatChar, utils.pickWeightedKey(gamesProbMap), formatChar,
-        dateUtils.genDate(dateFormatter.format(osgeEvent.cRegisterDate), dateFormatter.format(Calendar.getInstance().getTimeInMillis)),
-        playTime, numWins, numLosses)
+        dateUtils.genDate(dateFormatter.format(osgeEvent.cRegisterDate), dateFormatter.format(Calendar.getInstance().getTimeInMillis)), formatChar,
+        playTime, formatChar, numWins, formatChar, numLosses)
     }
     ms
   }
