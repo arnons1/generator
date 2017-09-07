@@ -35,7 +35,7 @@ object Customers {
     "poker"       -> 50  )
 }
 
-class Customers(cId: String, cName: String, cGender: String) {
+class Customers(cId: String, cName: String, cGender: String, cPlatform: String, cOs: String) {
   private val utils = new Utils
   private val dateUtils = new DateUtils
   private val random = Random
@@ -47,6 +47,8 @@ class Customers(cId: String, cName: String, cGender: String) {
   val custId = cId
   val custName = cName
   val custEmail = genEmail
+  val custPlatform = cPlatform
+  val custOs = cOs
   val registerDate = dateUtils.genDate("2010-01-01 12:10:00", formatter.format(Calendar.getInstance().getTimeInMillis))
   val custCountry = utils.pickWeightedKey(Customers.COUNTRY_PROBABILITY)
   val custAddress = custCountry match {
@@ -96,6 +98,15 @@ class Customers(cId: String, cName: String, cGender: String) {
                             } else {
                               0
                             }
+  val customerRevSource =  if (paidSubscriber == "yes") {
+                              if (random.nextFloat() < 0.8) {
+                                "Advertising"
+                              } else { // 30 - 99
+                                "Credit"
+                              }
+                            } else {
+                              ""
+                            }
   val paidDate =  if (customerPaidAmount == 0) {
                     ""
                   } else {
@@ -104,7 +115,9 @@ class Customers(cId: String, cName: String, cGender: String) {
                   }
   // games played by user based on gender
   val custGamesPlayed = gamesPlayed(custLifeTime, cGender)
-
+  val playTime = playTimeGen(custLifeTime, cGender)
+  val numWins = numWinGen(custGamesPlayed, cGender)
+  val numLosses = numLossGen(custGamesPlayed, cGender)
   override def toString = custId + " " + custEmail + " " + registerDate + " " + custCountry + " " + custAddress +
                           " " + custLifeTime + " " + custFriendCount + " " + paidSubscriber + " " + customerPaidAmount +
                           " " + paidDate + " " + custGamesPlayed.toString
@@ -117,10 +130,10 @@ class Customers(cId: String, cName: String, cGender: String) {
 
   private def gamesPlayed(customerLifeTime: Int, customerGender: String) = {
     val counter = collection.mutable.Map(
-      "city" -> 0,
+      "bubbles" -> 0,
       "pictionary" -> 0,
-      "sniper" -> 0,
-      "scramble" -> 0
+      "poker" -> 0,
+      "roulette" -> 0
     )
     val gamesProbMap =  if (customerGender == "female") {
                           Customers.GAMES_FEMALE_PROBABILITY
@@ -129,12 +142,54 @@ class Customers(cId: String, cName: String, cGender: String) {
                         }
     1 to customerLifeTime foreach { _ =>
       utils.pickWeightedKey(gamesProbMap) match {
-        case "city" => counter("city") += 1
+        case "bubbles" => counter("bubbles") += 1
         case "pictionary" => counter("pictionary") += 1
-        case "sniper" => counter("sniper") += 1
-        case "scramble" => counter("scramble") += 1
+        case "poker" => counter("poker") += 1
+        case "roulette" => counter("roulette") += 1
       }
     }
     counter
+  }
+
+  private def playTimeGen(customerLifeTime: Int, customerGender: String) = {
+    val counter = collection.mutable.Map(
+      "bubbles" -> 0,
+      "pictionary" -> 0,
+      "poker" -> 0,
+      "roulette" -> 0
+    )
+    val gamesProbMap =  if (customerGender == "female") {
+                          Customers.GAMES_FEMALE_PROBABILITY
+                        } else {
+                          Customers.GAMES_MALE_PROBABILITY
+                        }
+    1 to customerLifeTime foreach { _ =>
+      utils.pickWeightedKey(gamesProbMap) match {
+        case "bubbles" => counter("bubbles") += 15
+        case "pictionary" => counter("pictionary") += 14
+        case "poker" => counter("poker") += 22
+        case "roulette" => counter("roulette") += 10
+      }
+    }
+    counter("poker") + counter("bubbles") + counter("pictionary") + counter("roulette")
+  }
+
+  private def numWinGen(gamesPlayed: collection.mutable.Map[String,Int], customerGender: String)  = {
+      val wins =  if (customerGender == "female") {
+                          gamesPlayed("bubbles") + ((gamesPlayed("pictionary")*0.8).toInt) + (gamesPlayed("poker")/3) + (gamesPlayed("roulette")/2)
+                        } else {
+                          gamesPlayed("bubbles") + (gamesPlayed("pictionary")/2) + (gamesPlayed("poker")/2) + (gamesPlayed("roulette")/2)
+      }
+      wins
+  }
+    private def numLossGen(gamesPlayed: collection.mutable.Map[String,Int], customerGender: String)  = {
+      val loss =  if (customerGender == "female") {
+                          ( gamesPlayed("pictionary") - (gamesPlayed("pictionary")*0.2).toInt 
+                           + gamesPlayed("poker") - (gamesPlayed("poker")/3) + gamesPlayed("roulette") - (gamesPlayed("roulette")/2) )
+                        } else {
+                          ( gamesPlayed("pictionary") - (gamesPlayed("pictionary")/2)
+                           + gamesPlayed("poker") - (gamesPlayed("poker")/2) + gamesPlayed("roulette") - (gamesPlayed("roulette")/2) )
+      }
+      loss
   }
 }

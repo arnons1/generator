@@ -14,7 +14,7 @@ class OSGEGenerator {
     crcGenerator.reset()
     crcGenerator.update(java.util.UUID.randomUUID.toString.getBytes())
     val customerID = crcGenerator.getValue().toString()
-    val customer = new Customers(customerID, person.name, person.gender)
+    val customer = new Customers(customerID, person.name, person.gender, person.platform, person.os)
 
     new OSGEEvent(
       customer.custId,
@@ -32,8 +32,11 @@ class OSGEGenerator {
       customer.custGamesPlayed("roulette"),
       customer.custGamesPlayed("poker"),
       customer.customerPaidAmount,
+      customer.customerRevSource,
       customer.paidSubscriber,
-      customer.paidDate
+      customer.paidDate,
+      (customer.playTime, customer.numWins, customer.numLosses),
+      (customer.custPlatform, customer.custOs)
     )
   }
 }

@@ -104,6 +104,20 @@ class Person {
     case "female" => femaleName
   }
 
+  private val PLATFORM_PROBABILITY = Map(
+    "Smartphone" -> 70,
+    "Tablet" -> 30
+  )
+  private val OS_PROBABILITY = Map(
+    "iOS" -> 30,
+    "Android" -> 60,
+    "Windows" -> 7,
+    "Other" -> 3
+  )
+
+  val platform = utils.pickWeightedKey(PLATFORM_PROBABILITY)
+  val os = utils.pickWeightedKey(OS_PROBABILITY)
+
   val age = utils.pickWeightedKey(AGE_PROBABILITY).toInt
 
   private def initial = lettersArr(random.nextInt(lettersArr.size))

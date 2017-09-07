@@ -36,12 +36,14 @@ class Writer(eventsStartRange: Int,
       case "csv" => ','
       case _ => '\t'
     }
-    "%s%c%s%c%s%c%s%c%d%c%s%c%s%c%s%c%d%c%d%c%d%c%d%c%d%c%d%c%d%c%s\n".format(osgeEvent.cID, formatChar,
+    val (playTime, numWins, numLosses) = osgeEvent.playStats
+    val (custPlatform, custOs) = osgeEvent.custPOS
+    "%s%c%s%c%s%c%s%c%d%c%s%c%s%c%s%c%d%c%d%c%d%c%d%c%d%c%d%c%d%c%s%c%s%c%s\n".format(osgeEvent.cID, formatChar,
       osgeEvent.cName, formatChar, osgeEvent.cEmail, formatChar, osgeEvent.cGender, formatChar, osgeEvent.cAge,
       formatChar, osgeEvent.cAddress, formatChar, osgeEvent.cCountry, formatChar, osgeEvent.cRegisterDate, formatChar,
       osgeEvent.cFriendCount, formatChar, osgeEvent.cLifeTime, formatChar, osgeEvent.bubblesGamePlayed, formatChar,
       osgeEvent.pictionaryGamePlayed, formatChar, osgeEvent.rouletteGamePlayed, formatChar, osgeEvent.pokerGamePlayed,
-      formatChar, osgeEvent.cRevenue, formatChar, osgeEvent.paidSubscriber)
+      formatChar, osgeEvent.cRevenue, formatChar, osgeEvent.paidSubscriber, formatChar, custPlatform, formatChar, custOs)
   }
 
   def formatEventMultiToString(osgeEvent: OSGEEvent, formatter: String) = {
@@ -51,19 +53,20 @@ class Writer(eventsStartRange: Int,
       case "csv" => ','
       case _ => '\t'
     }
-
+    val (playTime, numWins, numLosses) = osgeEvent.playStats
+    val (custPlatform, custOs) = osgeEvent.custPOS
     val ms = scala.collection.mutable.Map[String, ArrayBuffer[String]](
       "Customer" -> new ArrayBuffer[String](1),
       "Revenue" -> new ArrayBuffer[String],
       "Fact" -> new ArrayBuffer[String](osgeEvent.cLifeTime)
     )
 
-    ms("Customer") += "%s%c%s%c%s%c%d%c%s%c%s%c%d%c%d\n".format(osgeEvent.cID, formatChar, osgeEvent.cName, formatChar,
+    ms("Customer") += "%s%c%s%c%s%c%d%c%s%c%s%c%d%c%d%c%s%c%s\n".format(osgeEvent.cID, formatChar, osgeEvent.cName, formatChar,
       osgeEvent.cGender, formatChar, osgeEvent.cAge, formatChar, osgeEvent.cRegisterDate, formatChar,
-      osgeEvent.cCountry, formatChar, osgeEvent.cFriendCount, formatChar, osgeEvent.cLifeTime)
+      osgeEvent.cCountry, formatChar, osgeEvent.cFriendCount, formatChar, osgeEvent.cLifeTime, custPlatform, custOs)
 
     if (osgeEvent.cRevenue != 0) {
-      ms("Revenue") += "%s%c%s%c%d\n".format(osgeEvent.cID, formatChar, osgeEvent.paidDate, formatChar, osgeEvent.cRevenue)
+      ms("Revenue") += "%s%c%s%c%d%c%s\n".format(osgeEvent.cID, formatChar, osgeEvent.paidDate, formatChar, osgeEvent.cRevenue, formatChar, osgeEvent.cRevSource)
     }
 
     1 to osgeEvent.cLifeTime foreach { _ =>
@@ -72,8 +75,9 @@ class Writer(eventsStartRange: Int,
                           } else {
                             Customers.GAMES_MALE_PROBABILITY
                           }
-      ms("Fact") += "%s%c%s%c%s\n".format(osgeEvent.cID, formatChar, utils.pickWeightedKey(gamesProbMap), formatChar,
-        dateUtils.genDate(dateFormatter.format(osgeEvent.cRegisterDate), dateFormatter.format(Calendar.getInstance().getTimeInMillis)))
+      ms("Fact") += "%s%c%s%c%s%c%d%c%d%c%d\n".format(osgeEvent.cID, formatChar, utils.pickWeightedKey(gamesProbMap), formatChar,
+        dateUtils.genDate(dateFormatter.format(osgeEvent.cRegisterDate), dateFormatter.format(Calendar.getInstance().getTimeInMillis)),
+        playTime, numWins, numLosses)
     }
     ms
   }

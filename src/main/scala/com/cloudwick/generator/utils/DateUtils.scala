@@ -7,7 +7,7 @@ import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTimeConstants, Period, Days, LocalDate}
 
 class DateUtils extends LazyLogging {
-  private lazy val formatter = new SimpleDateFormat("dd-MMM-yy HH:mm:ss")
+  private lazy val formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
   private lazy val jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd")
 
   /**
@@ -26,7 +26,7 @@ class DateUtils extends LazyLogging {
 
     val diff: Long = (v1 + Math.random() * (v2 - v1)).toLong
     cal.setTimeInMillis(diff)
-    cal.getTimeInMillis
+    formatter.format(cal.getTimeInMillis)
   }
 
   /**
