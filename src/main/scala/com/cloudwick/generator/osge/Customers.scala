@@ -27,11 +27,23 @@ object Customers {
     "poker"     -> 5
   )
 
+  val GAMES_FEMALE_PROBABILITY_AFTER_YEAR = Map(
+    "bubbles"       -> 60,
+    "pictionary" -> 10,
+    "roulette"   -> 23,
+    "poker"     -> 7
+  )
+
   // game most played by males
   val GAMES_MALE_PROBABILITY = Map(
     "bubbles"     -> 2,
     "roulette"   -> 40,
     "pictionary" -> 8,
+    "poker"       -> 50  )
+  val GAMES_MALE_PROBABILITY_AFTER_YEAR = Map(
+    "bubbles"     -> 5,
+    "roulette"   -> 40,
+    "pictionary" -> 2,
     "poker"       -> 50  )
 }
 
@@ -49,7 +61,7 @@ class Customers(cId: String, cName: String, cGender: String, cPlatform: String, 
   val custEmail = genEmail
   val custPlatform = cPlatform
   val custOs = cOs
-  val registerDate = dateUtils.genDate("2010-01-01 12:10:00", formatter.format(Calendar.getInstance().getTimeInMillis))
+  val registerDate = dateUtils.genDate("2009-01-01 12:10:00", formatter.format(Calendar.getInstance().getTimeInMillis))
   val custCountry = utils.pickWeightedKey(Customers.COUNTRY_PROBABILITY)
   val custAddress = custCountry match {
     case "USA" => new Address().toString
@@ -58,69 +70,71 @@ class Customers(cId: String, cName: String, cGender: String, cPlatform: String, 
   // users who pay will have a average friends count of > 10
   private val paidCustomerFriendCount = 10
   // maximum friends each user can have
-  private val maxFriendCountRange = 500
+  private val maxFriendCountRange = 150
   // 40 % of customers are paid
   private val paidCustomerPercent = 0.4
   // set 60% of the customers life time to < 10 days and others to 10-100 days
   val custLifeTime = if (random.nextFloat() <  0.6) {
-                          random.nextInt(10)
-                         } else {
-                          utils.randInt(10, 100)
-                         }
-  // 30% of the users don't have any friends at all
+    random.nextInt(10)
+  } else {
+    utils.randInt(10, 100)
+  }
+  // 30% of the users don't have any friends at all. The rest is female/male defined.
   val custFriendCount = if (random.nextFloat() < 0.3) {
-                          0
-                        } else {
-                          // 40% of users will have fried count > 5 and other will be friend < 5
-                          if (random.nextFloat() < 0.4) {
-                            utils.randInt(paidCustomerFriendCount, maxFriendCountRange)
-                          } else {
-                            random.nextInt(paidCustomerFriendCount)
-                          }
-                        }
+    0
+  } else {
+    // 40% of users will have fried count > 5 and other will be friend < 5
+    val friendProb = if (cGender == "female") { 0.4 } else { 0.2 }
+    if (random.nextFloat() < friendProb) {
+      utils.randInt(paidCustomerFriendCount, maxFriendCountRange)
+    } else {
+      random.nextInt(paidCustomerFriendCount)
+    }
+  }
   // users who have friend count > paidCustomerFriendCount and total life time in the site > 20 are paid subcribers
   val paidSubscriber =  if (custFriendCount > paidCustomerFriendCount && custLifeTime > 20) {
-                          if (random.nextFloat() < paidCustomerPercent) {
-                            "yes"
-                          } else {
-                            "no"
-                          }
-                        } else {
-                          "no"
-                        }
+    if (random.nextFloat() < paidCustomerPercent) {
+      "yes"
+    } else {
+      "no"
+    }
+  } else {
+    "no"
+  }
 
   val customerPaidAmount =  if (paidSubscriber == "yes") {
-                              if (random.nextFloat() < 0.8) {
-                                utils.randInt(5, 30)
-                              } else { // 30 - 99
-                                utils.randInt(30, 99)
-                              }
-                            } else {
-                              0
-                            }
+    if (random.nextFloat() < 0.8) {
+      utils.randInt(5, 30)
+    } else { // 30 - 99
+      utils.randInt(30, 99)
+    }
+  } else {
+    0
+  }
+  val friendRank = custFriendCount / 150.0
   val customerRevSource =  if (paidSubscriber == "yes") {
-                              if (random.nextFloat() < 0.8) {
-                                "Advertising"
-                              } else { // 30 - 99
-                                "Credit"
-                              }
-                            } else {
-                              ""
-                            }
+    if (random.nextFloat() < friendRank) {
+      "Advertising"
+    } else { // 30 - 99
+      "Credit"
+    }
+  } else {
+    ""
+  }
   val paidDate =  if (customerPaidAmount == 0) {
-                    ""
-                  } else {
-                    // generate a date between users registration date and time now
-                    dateUtils.genDate(registerDate, formatter.format(Calendar.getInstance().getTimeInMillis))
-                  }
+    ""
+  } else {
+    // generate a date between users registration date and time now
+    dateUtils.genDate(registerDate, formatter.format(Calendar.getInstance().getTimeInMillis))
+  }
   // games played by user based on gender
-  val custGamesPlayed = gamesPlayed(custLifeTime, cGender)
-  val playTime = playTimeGen(custLifeTime, cGender)
+  val custGamesPlayed = gamesPlayed(custLifeTime, paidDate, cGender)
+  val playTime = playTimeGen(custLifeTime, paidDate, cGender)
   val numWins = numWinGen(custGamesPlayed, cGender)
   val numLosses = numLossGen(custGamesPlayed, cGender)
   override def toString = custId + " " + custEmail + " " + registerDate + " " + custCountry + " " + custAddress +
-                          " " + custLifeTime + " " + custFriendCount + " " + paidSubscriber + " " + customerPaidAmount +
-                          " " + paidDate + " " + custGamesPlayed.toString
+  " " + custLifeTime + " " + custFriendCount + " " + paidSubscriber + " " + customerPaidAmount +
+  " " + paidDate + " " + custGamesPlayed.toString
 
   private def genEmail = {
     val domains = Array("yahoo.com", "gmail.com", "privacy.net", "webmail.com", "msn.com",
@@ -128,18 +142,27 @@ class Customers(cId: String, cName: String, cGender: String, cPlatform: String, 
     s"${domains(random.nextInt(domains.size))}"
   }
 
-  private def gamesPlayed(customerLifeTime: Int, customerGender: String) = {
+  private def gamesPlayed(customerLifeTime: Int, paidDate: String, customerGender: String) = {
     val counter = collection.mutable.Map(
       "bubbles" -> 0,
       "pictionary" -> 0,
       "poker" -> 0,
       "roulette" -> 0
     )
+    val cal = Calendar.getInstance()
+    cal.setTime(formatter.parse(paidDate))
     val gamesProbMap =  if (customerGender == "female") {
-                          Customers.GAMES_FEMALE_PROBABILITY
-                        } else {
-                          Customers.GAMES_MALE_PROBABILITY
-                        }
+      if (cal.getTimeInMillis > 1421881200)
+        Customers.GAMES_FEMALE_PROBABILITY_AFTER_YEAR
+      else
+        Customers.GAMES_FEMALE_PROBABILITY
+    } else {
+      if (cal.getTimeInMillis > 1421881200)
+        Customers.GAMES_MALE_PROBABILITY_AFTER_YEAR
+      else
+        Customers.GAMES_MALE_PROBABILITY
+    }
+    
     1 to customerLifeTime foreach { _ =>
       utils.pickWeightedKey(gamesProbMap) match {
         case "bubbles" => counter("bubbles") += 1
@@ -151,18 +174,26 @@ class Customers(cId: String, cName: String, cGender: String, cPlatform: String, 
     counter
   }
 
-  private def playTimeGen(customerLifeTime: Int, customerGender: String) = {
+  private def playTimeGen(customerLifeTime: Int, paidDate: String, customerGender: String) = {
     val counter = collection.mutable.Map(
       "bubbles" -> 0,
       "pictionary" -> 0,
       "poker" -> 0,
       "roulette" -> 0
     )
+    val cal = Calendar.getInstance()
+    cal.setTime(formatter.parse(paidDate))
     val gamesProbMap =  if (customerGender == "female") {
-                          Customers.GAMES_FEMALE_PROBABILITY
-                        } else {
-                          Customers.GAMES_MALE_PROBABILITY
-                        }
+      if (cal.getTimeInMillis > 1421881200)
+        Customers.GAMES_FEMALE_PROBABILITY_AFTER_YEAR
+      else
+        Customers.GAMES_FEMALE_PROBABILITY
+    } else {
+      if (cal.getTimeInMillis > 1421881200)
+        Customers.GAMES_MALE_PROBABILITY_AFTER_YEAR
+      else
+        Customers.GAMES_MALE_PROBABILITY
+    }
     1 to customerLifeTime foreach { _ =>
       utils.pickWeightedKey(gamesProbMap) match {
         case "bubbles" => counter("bubbles") += 15
@@ -175,21 +206,21 @@ class Customers(cId: String, cName: String, cGender: String, cPlatform: String, 
   }
 
   private def numWinGen(gamesPlayed: collection.mutable.Map[String,Int], customerGender: String)  = {
-      val wins =  if (customerGender == "female") {
-                          gamesPlayed("bubbles") + ((gamesPlayed("pictionary")*0.8).toInt) + (gamesPlayed("poker")/3) + (gamesPlayed("roulette")/2)
-                        } else {
-                          gamesPlayed("bubbles") + (gamesPlayed("pictionary")/2) + (gamesPlayed("poker")/2) + (gamesPlayed("roulette")/2)
-      }
-      wins
+    val wins =  if (customerGender == "female") {
+      gamesPlayed("bubbles") + ((gamesPlayed("pictionary")*0.8).toInt) + (gamesPlayed("poker")/3) + (gamesPlayed("roulette")/2)
+    } else {
+      gamesPlayed("bubbles") + (gamesPlayed("pictionary")/2) + (gamesPlayed("poker")/2) + (gamesPlayed("roulette")/2)
+    }
+    wins
   }
-    private def numLossGen(gamesPlayed: collection.mutable.Map[String,Int], customerGender: String)  = {
-      val loss =  if (customerGender == "female") {
-                          ( gamesPlayed("pictionary") - (gamesPlayed("pictionary")*0.2).toInt 
-                           + gamesPlayed("poker") - (gamesPlayed("poker")/3) + gamesPlayed("roulette") - (gamesPlayed("roulette")/2) )
-                        } else {
-                          ( gamesPlayed("pictionary") - (gamesPlayed("pictionary")/2)
-                           + gamesPlayed("poker") - (gamesPlayed("poker")/2) + gamesPlayed("roulette") - (gamesPlayed("roulette")/2) )
-      }
-      loss
+  private def numLossGen(gamesPlayed: collection.mutable.Map[String,Int], customerGender: String)  = {
+    val loss =  if (customerGender == "female") {
+      ( gamesPlayed("pictionary") - (gamesPlayed("pictionary")*0.2).toInt
+        + gamesPlayed("poker") - (gamesPlayed("poker")/3) + gamesPlayed("roulette") - (gamesPlayed("roulette")/2) )
+    } else {
+      ( gamesPlayed("pictionary") - (gamesPlayed("pictionary")/2)
+        + gamesPlayed("poker") - (gamesPlayed("poker")/2) + gamesPlayed("roulette") - (gamesPlayed("roulette")/2) )
+    }
+    loss
   }
 }
